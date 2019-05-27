@@ -52,6 +52,7 @@ either expressed or implied, of the FreeBSD Project.
 
 #endregion --- License ---
 
+using Newtonsoft.Json;
 using System;
 using System.Runtime.InteropServices;
 
@@ -151,6 +152,14 @@ namespace MatterHackers.VectorMath
 			Row3 = new Vector4(double16[12], double16[13], double16[14], double16[15]);
 		}
 
+		public Matrix4X4(float[] float16)
+		{
+			Row0 = new Vector4(float16[0], float16[1], float16[2], float16[3]);
+			Row1 = new Vector4(float16[4], float16[5], float16[6], float16[7]);
+			Row2 = new Vector4(float16[8], float16[9], float16[10], float16[11]);
+			Row3 = new Vector4(float16[12], float16[13], float16[14], float16[15]);
+		}
+
 		#endregion Constructors
 
 		#region Public Members
@@ -160,6 +169,7 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// The determinant of this matrix
 		/// </summary>
+		[JsonIgnore]
 		public double Determinant
 		{
 			get
@@ -177,6 +187,7 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// Get just the position out of the matrix.
 		/// </summary>
+		[JsonIgnore]
 		public Vector3 Position
 		{
 			get { return new Vector3(Row3); }
@@ -185,6 +196,7 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// The first column of this matrix
 		/// </summary>
+		[JsonIgnore]
 		public Vector4 Column0
 		{
 			get { return new Vector4(Row0.X, Row1.X, Row2.X, Row3.X); }
@@ -193,6 +205,7 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// The second column of this matrix
 		/// </summary>
+		[JsonIgnore]
 		public Vector4 Column1
 		{
 			get { return new Vector4(Row0.Y, Row1.Y, Row2.Y, Row3.Y); }
@@ -201,6 +214,7 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// The third column of this matrix
 		/// </summary>
+		[JsonIgnore]
 		public Vector4 Column2
 		{
 			get { return new Vector4(Row0.Z, Row1.Z, Row2.Z, Row3.Z); }
@@ -209,6 +223,7 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// The fourth column of this matrix
 		/// </summary>
+		[JsonIgnore]
 		public Vector4 Column3
 		{
 			get { return new Vector4(Row0.W, Row1.W, Row2.W, Row3.W); }
@@ -217,81 +232,97 @@ namespace MatterHackers.VectorMath
 		/// <summary>
 		/// Gets or sets the value at row 1, column 1 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M11 { get { return Row0.X; } set { Row0.X = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 1, column 2 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M12 { get { return Row0.Y; } set { Row0.Y = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 1, column 3 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M13 { get { return Row0.Z; } set { Row0.Z = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 1, column 4 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M14 { get { return Row0.W; } set { Row0.W = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 2, column 1 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M21 { get { return Row1.X; } set { Row1.X = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 2, column 2 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M22 { get { return Row1.Y; } set { Row1.Y = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 2, column 3 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M23 { get { return Row1.Z; } set { Row1.Z = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 2, column 4 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M24 { get { return Row1.W; } set { Row1.W = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 3, column 1 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M31 { get { return Row2.X; } set { Row2.X = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 3, column 2 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M32 { get { return Row2.Y; } set { Row2.Y = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 3, column 3 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M33 { get { return Row2.Z; } set { Row2.Z = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 3, column 4 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M34 { get { return Row2.W; } set { Row2.W = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 4, column 1 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M41 { get { return Row3.X; } set { Row3.X = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 4, column 2 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M42 { get { return Row3.Y; } set { Row3.Y = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 4, column 3 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M43 { get { return Row3.Z; } set { Row3.Z = value; } }
 
 		/// <summary>
 		/// Gets or sets the value at row 4, column 4 of this instance.
 		/// </summary>
+		[JsonIgnore]
 		public double M44 { get { return Row3.W; } set { Row3.W = value; } }
 
 		#endregion Properties
@@ -386,6 +417,55 @@ namespace MatterHackers.VectorMath
 			}
 
 			return rotation;
+#if false
+			double trace = m[0,0] + m[1, 1] + m[2, 2];
+
+			if (trace > 0)
+			{
+				double s = 0.5 / Math.Sqrt(trace + 1.0);
+				this.w = 0.25 / s;
+				this.X = (m[2, 1] - m[1, 2]) * s;
+				this.Y = (m[0, 2] - m[2, 0]) * s;
+				this.Z = (m[1, 0] - m[0, 1]) * s;
+			}
+			else
+			{
+				if (m[0, 0] > m[1, 1] && m[0, 0] > m[2, 2])
+				{
+					double s = 2.0 * Math.Sqrt(1.0 + m[0, 0] - m[1, 1] - m[2, 2]);
+					this.w = (m[2, 1] - m[1, 2]) / s;
+					this.X = 0.25 * s;
+					this.Y = (m[0, 1] + m[1, 0]) / s;
+					this.Z = (m[0, 2] + m[2, 0]) / s;
+				}
+				else if (m[1, 1] > m[2, 2])
+				{
+					double s = 2.0 * Math.Sqrt(1.0 + m[1, 1] - m[0, 0] - m[2, 2]);
+					this.w = (m[0, 2] - m[2, 0]) / s;
+					this.X = (m[0, 1] + m[1, 0]) / s;
+					this.Y = 0.25 * s;
+					this.Z = (m[1, 2] + m[2, 1]) / s;
+				}
+				else
+				{
+					double s = 2.0 * Math.Sqrt(1.0 + m[2, 2] - m[0, 0] - m[1, 1]);
+					this.w = (m[1, 0] - m[0, 1]) / s;
+					this.X = (m[0, 2] + m[2, 0]) / s;
+					this.Y = (m[1, 2] + m[2, 1]) / s;
+					this.Z = 0.25 * s;
+				}
+			}
+#endif
+#if false
+			Quaternion Q = new Quaternion();
+			Q.w = Math.Sqrt(Math.Max(0, 1 + m[0, 0] + m[1, 1] + m[2, 2])) / 2;
+			Q.X = Math.Sqrt(Math.Max(0, 1 + m[0, 0] - m[1, 1] - m[2, 2])) / 2;
+			Q.Y = Math.Sqrt(Math.Max(0, 1 - m[0, 0] + m[1, 1] - m[2, 2])) / 2;
+			Q.Z = Math.Sqrt(Math.Max(0, 1 - m[0, 0] - m[1, 1] + m[2, 2])) / 2;
+			Q.X = CopySign(Q.X, m[2, 1] - m[1, 2]);
+			Q.Y = CopySign(Q.Y, m[0, 2] - m[2, 0]);
+			Q.Z = CopySign(Q.Z, m[1, 0] - m[0, 1]);
+#endif
 		}
 
 		#region public void Invert()
@@ -396,6 +476,17 @@ namespace MatterHackers.VectorMath
 		public void Invert()
 		{
 			this = Matrix4X4.Invert(this);
+		}
+
+		[JsonIgnore]
+		public Matrix4X4 Inverted
+		{
+			get
+			{
+				var inverted = this;
+				inverted.Invert();
+				return inverted;
+			}
 		}
 
 		#endregion public void Invert()
@@ -411,6 +502,14 @@ namespace MatterHackers.VectorMath
 		}
 
 		#endregion public void Transpose()
+
+		public bool IsValid()
+		{
+			return Row0.IsValid()
+				&& Row1.IsValid()
+				&& Row2.IsValid()
+				&& Row3.IsValid();
+		}
 
 		#endregion Instance
 
@@ -552,8 +651,8 @@ namespace MatterHackers.VectorMath
 		/// <returns>A rotation matrix</returns>
 		public static Matrix4X4 CreateRotation(Vector3 axis, double angle)
 		{
-			double cos = System.Math.Cos(-angle);
-			double sin = System.Math.Sin(-angle);
+			double cos = System.Math.Cos(angle);
+			double sin = System.Math.Sin(angle);
 			double t = 1.0 - cos;
 
 			axis.Normalize();
@@ -591,9 +690,9 @@ namespace MatterHackers.VectorMath
 			return CreateRotation(q);
 		}
 
-		#endregion CreateRotation[XYZ]
+#endregion CreateRotation[XYZ]
 
-		#region CreateTranslation
+			#region CreateTranslation
 
 		/// <summary>
 		/// Creates a translation matrix.
@@ -645,9 +744,9 @@ namespace MatterHackers.VectorMath
 			return result;
 		}
 
-		#endregion CreateTranslation
+			#endregion CreateTranslation
 
-		#region CreateOrthographic
+			#region CreateOrthographic
 
 		/// <summary>
 		/// Creates an orthographic projection matrix.
@@ -677,9 +776,9 @@ namespace MatterHackers.VectorMath
 			return result;
 		}
 
-		#endregion CreateOrthographic
+			#endregion CreateOrthographic
 
-		#region CreateOrthographicOffCenter
+			#region CreateOrthographicOffCenter
 
 		/// <summary>
 		/// Creates an orthographic projection matrix.
@@ -726,9 +825,9 @@ namespace MatterHackers.VectorMath
 			return result;
 		}
 
-		#endregion CreateOrthographicOffCenter
+			#endregion CreateOrthographicOffCenter
 
-		#region CreatePerspectiveFieldOfView
+			#region CreatePerspectiveFieldOfView
 
 		/// <summary>
 		/// Creates a perspective projection matrix.
@@ -794,9 +893,9 @@ namespace MatterHackers.VectorMath
 			return result;
 		}
 
-		#endregion CreatePerspectiveFieldOfView
+			#endregion CreatePerspectiveFieldOfView
 
-		#region CreatePerspectiveOffCenter
+			#region CreatePerspectiveOffCenter
 
 		/// <summary>
 		/// Creates an perspective projection matrix.
@@ -869,9 +968,9 @@ namespace MatterHackers.VectorMath
 			return result;
 		}
 
-		#endregion CreatePerspectiveOffCenter
+			#endregion CreatePerspectiveOffCenter
 
-		#region CreateScale
+			#region CreateScale
 
 		/// <summary>
 		/// Build a scaling matrix
@@ -910,9 +1009,9 @@ namespace MatterHackers.VectorMath
 			return result;
 		}
 
-		#endregion CreateScale
+			#endregion CreateScale
 
-		#region Camera Helper Functions
+			#region Camera Helper Functions
 
 		/// <summary>
 		/// Build a world space to camera space matrix
@@ -924,10 +1023,10 @@ namespace MatterHackers.VectorMath
 		public static Matrix4X4 LookAt(Vector3 eye, Vector3 target, Vector3 up)
 		{
 			// There are lots of examples of look at code on the internet that don't do all these normalizes and also find the position
-			// through several dot products.  The problem with them is that they have a bit of error in that all the vectors arn't normal and need to be.
+			// through several dot products.  The problem with them is that they have a bit of error in that all the vectors aren't normal and need to be.
 			Vector3 z = Vector3.Normalize(eye - target);
-			Vector3 x = Vector3.Normalize(Vector3.Cross(up, z));
-			Vector3 y = Vector3.Normalize(Vector3.Cross(z, x));
+			Vector3 x = Vector3.Normalize(up.Cross(z));
+			Vector3 y = Vector3.Normalize(z.Cross(x));
 
 			Matrix4X4 rot = new Matrix4X4(new Vector4(x.X, y.X, z.X, 0.0),
 										new Vector4(x.Y, y.Y, z.Y, 0.0),
@@ -996,9 +1095,9 @@ namespace MatterHackers.VectorMath
 			return Frustum(xMin, xMax, yMin, yMax, near, far);
 		}
 
-		#endregion Camera Helper Functions
+			#endregion Camera Helper Functions
 
-		#region Multiply Functions
+			#region Multiply Functions
 
 		/// <summary>
 		/// Multiplies two instances.
@@ -1040,9 +1139,9 @@ namespace MatterHackers.VectorMath
 			result.M44 = left.M41 * right.M14 + left.M42 * right.M24 + left.M43 * right.M34 + left.M44 * right.M44;
 		}
 
-		#endregion Multiply Functions
+			#endregion Multiply Functions
 
-		#region Invert Functions
+			#region Invert Functions
 
 		/// <summary>
 		/// Calculate the inverse of the given matrix
@@ -1111,8 +1210,8 @@ namespace MatterHackers.VectorMath
 				// check for singular matrix
 				if (pivot == 0.0)
 				{
-					throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
-					//return mat;
+					//throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
+					return mat;
 				}
 
 				// Scale row so it has a unit diagonal
@@ -1154,9 +1253,9 @@ namespace MatterHackers.VectorMath
 			return mat;
 		}
 
-		#endregion Invert Functions
+			#endregion Invert Functions
 
-		#region Transpose
+			#region Transpose
 
 		/// <summary>
 		/// Calculate the transpose of the given matrix
@@ -1181,11 +1280,11 @@ namespace MatterHackers.VectorMath
 			result.Row3 = mat.Column3;
 		}
 
-		#endregion Transpose
+			#endregion Transpose
 
-		#endregion Static
+#endregion Static
 
-		#region Operators
+			#region Operators
 
 		/// <summary>
 		/// Matrix multiplication
@@ -1220,11 +1319,11 @@ namespace MatterHackers.VectorMath
 			return !left.Equals(right);
 		}
 
-		#endregion Operators
+			#endregion Operators
 
-		#region Overrides
+			#region Overrides
 
-		#region public override string ToString()
+			#region public override string ToString()
 
 		/// <summary>
 		/// Returns a System.String that represents the current Matrix44.
@@ -1235,9 +1334,14 @@ namespace MatterHackers.VectorMath
 			return String.Format("{0},  \n{1},  \n{2},  \n{3}", Row0, Row1, Row2, Row3);
 		}
 
-		#endregion public override string ToString()
+		public static Matrix4X4 FromString(string values)
+		{
+			throw new NotImplementedException();
+		}
 
-		#region public override int GetHashCode()
+			#endregion public override string ToString()
+
+			#region public override int GetHashCode()
 
 		/// <summary>
 		/// Returns the hashcode for this instance.
@@ -1253,24 +1357,19 @@ namespace MatterHackers.VectorMath
 		// http://stackoverflow.com/questions/8094867/good-gethashcode-override-for-list-of-foo-objects-respecting-the-order
 		/// </summary>
 		/// <returns></returns>
-		public long GetLongHashCode()
+		public ulong GetLongHashCode(ulong hash = 14695981039346656037)
 		{
-			long hash = 19;
-
-			unchecked
-			{
-				hash = hash * 31 + Row0.GetLongHashCode();
-				hash = hash * 31 + Row1.GetLongHashCode();
-				hash = hash * 31 + Row2.GetLongHashCode();
-				hash = hash * 31 + Row3.GetLongHashCode();
-			}
+			hash = Row0.GetLongHashCode(hash);
+			hash = Row1.GetLongHashCode(hash);
+			hash = Row2.GetLongHashCode(hash);
+			hash = Row3.GetLongHashCode(hash);
 
 			return hash;
 		}
 
-		#endregion public override int GetHashCode()
+			#endregion public override int GetHashCode()
 
-		#region public override bool Equals(object obj)
+			#region public override bool Equals(object obj)
 
 		/// <summary>
 		/// Indicates whether this instance and a specified object are equal.
@@ -1285,13 +1384,13 @@ namespace MatterHackers.VectorMath
 			return this.Equals((Matrix4X4)obj);
 		}
 
-		#endregion public override bool Equals(object obj)
+			#endregion public override bool Equals(object obj)
 
-		#endregion Overrides
+			#endregion Overrides
 
-		#endregion Public Members
+#endregion Public Members
 
-		#region IEquatable<Matrix4d> Members
+			#region IEquatable<Matrix4d> Members
 
 		/// <summary>Indicates whether the current matrix is equal to another matrix.</summary>
 		/// <param name="other">An matrix to compare with this matrix.</param>
@@ -1320,7 +1419,7 @@ namespace MatterHackers.VectorMath
 				Row3.Equals(other.Row3, errorRange);
 		}
 
-		#endregion IEquatable<Matrix4d> Members
+			#endregion IEquatable<Matrix4d> Members
 
 		public float[] GetAsFloatArray()
 		{
@@ -1346,4 +1445,4 @@ namespace MatterHackers.VectorMath
 	}
 
 #endif
-}
+		}

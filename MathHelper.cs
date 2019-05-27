@@ -67,7 +67,7 @@ namespace MatterHackers.VectorMath
 		public const double PiOver3 = Pi / 3;
 
 		/// <summary>
-		/// Definesthe value of  Pi divided by four as a <see cref="System.Single"/>.
+		/// Defines the value of  Pi divided by four as a <see cref="System.Single"/>.
 		/// </summary>
 		public const double PiOver4 = Pi / 4;
 
@@ -218,9 +218,10 @@ namespace MatterHackers.VectorMath
 				Value += Tau;
 			}
 
-			if (Value >= Tau)
+			if ((Value - Tau) > .00001)
 			{
-				Value -= Tau;
+				int numTurns = (int)(Value / Tau);
+				Value -= (Tau * numTurns);
 			}
 
 			if (Value < 0 || Value > Tau) throw new Exception("Value >= 0 && Value <= Tau");
@@ -234,12 +235,12 @@ namespace MatterHackers.VectorMath
 			if (EndAngle != Range0ToTau(EndAngle)) throw new Exception("EndAngle != Range0ToTau(EndAngle)");
 
 			double DeltaAngle = EndAngle - StartAngle;
-			if (DeltaAngle > Tau / 2)
+			if (DeltaAngle > Tau)
 			{
 				DeltaAngle -= Tau;
 			}
 
-			if (DeltaAngle < -Tau / 2)
+			if (DeltaAngle < -Tau)
 			{
 				DeltaAngle += Tau;
 			}

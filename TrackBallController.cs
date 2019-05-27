@@ -1,5 +1,5 @@
 ﻿/*
-Copyright (c) 2017, Lars Brubaker, John Lewin
+Copyright (c) 2018, Lars Brubaker, John Lewin
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,111 +29,84 @@ either expressed or implied, of the FreeBSD Project.
 
 using System;
 
-namespace MatterHackers.VectorMath
+namespace MatterHackers.VectorMath.TrackBall
 {
+	public enum TrackBallTransformType { None, Translation, Rotation, Scale };
+
 	public class TrackBallController
 	{
-		public enum MouseDownType { None, Translation, Rotation, Scale };
-
-		private const double Epsilon = 1.0e-5;
-		private double rotationTrackingRadiusPixels;
-
-		private MouseDownType currentTrackingType = MouseDownType.None;
-
 		private Matrix4X4 localToScreenTransform;
 
 		private Vector2 mouseDownPosition;
-		private Vector3 moveSpherePosition;
+
+		public Vector2 ScreenCenter { get; set; }
 
 		private Vector2 lastTranslationMousePosition = Vector2.Zero;
 		private Vector2 lastScaleMousePosition = Vector2.Zero;
 
-		public event EventHandler TransformChanged;
-
 		private WorldView world;
 
-		public TrackBallController(WorldView world)
-			: this(1, world)
-		{
-		}
-
-		public TrackBallController(double trackBallRadius, WorldView world)
+		public TrackBallController(WorldView world, double trackBallRadius = 1)
 		{
 			mouseDownPosition = new Vector2();
-			moveSpherePosition = new Vector3();
-			this.rotationTrackingRadiusPixels = trackBallRadius;
+			this.TrackBallRadius = trackBallRadius;
 
 			this.world = world;
 		}
 
-		public void CopyTransforms(TrackBallController trackBallToCopy)
-		{
-			rotationTrackingRadiusPixels = trackBallToCopy.rotationTrackingRadiusPixels;
-			this.world.RotationMatrix = trackBallToCopy.world.RotationMatrix;
-			this.world.TranslationMatrix = trackBallToCopy.world.TranslationMatrix;
+		public TrackBallTransformType CurrentTrackingType { get; private set; } = TrackBallTransformType.None;
 
-			OnTransformChanged(null);
-		}
-
-		public MouseDownType CurrentTrackingType
-		{
-			get
-			{
-				return currentTrackingType;
-			}
-		}
-
-		private Vector3 MapMoveToSphere(Vector2 screenPoint, bool rotateOnZ)
+		public static Vector3 MapMoveToSphere(Vector2 screenCenter, WorldView world, double trackBallRadius, Vector2 startPosition, Vector2 endPosition, bool rotateOnZ)
 		{
 			if (rotateOnZ)
 			{
-				var deltaFromScreenCenter = world.ScreenCenter - screenPoint;
+				var deltaFromScreenCenter = screenCenter - endPosition;
 
-				var angleToTravel = world.ScreenCenter.GetDeltaAngle(mouseDownPosition, screenPoint);
+				var angleToTravel = screenCenter.GetDeltaAngle(startPosition, endPosition);
 
 				// now rotate that position about z in the direction of the screen vector
-				var positionOnRotationSphere = Vector3.Transform(new Vector3(1, 0, 0), Matrix4X4.CreateRotationZ(angleToTravel/2));
+				var positionOnRotationSphere = Vector3Ex.Transform(new Vector3(1, 0, 0), Matrix4X4.CreateRotationZ(angleToTravel/2));
 
 				return positionOnRotationSphere;
 			}
 			else
 			{
-				var deltaFromStartPixels = screenPoint - mouseDownPosition;
-				var deltaOnSurface = new Vector2(deltaFromStartPixels.X / rotationTrackingRadiusPixels, deltaFromStartPixels.Y / rotationTrackingRadiusPixels);
+				var deltaFromStartPixels = endPosition - startPosition;
+				var deltaOnSurface = new Vector2(deltaFromStartPixels.X / trackBallRadius, deltaFromStartPixels.Y / trackBallRadius);
 
 				var lengthOnSurfaceRadi = deltaOnSurface.Length;
 
 				// get this rotation on the surface of the sphere about y
-				var positionAboutY = Vector3.Transform(new Vector3(0, 0, 1), Matrix4X4.CreateRotationY(lengthOnSurfaceRadi));
+				var positionAboutY = Vector3Ex.Transform(new Vector3(0, 0, 1), Matrix4X4.CreateRotationY(lengthOnSurfaceRadi));
 
 				// get the angle that this distance travels around the sphere
 				var angleToTravel = Math.Atan2(deltaOnSurface.Y, deltaOnSurface.X);
 
 				// now rotate that position about z in the direction of the screen vector
-				var positionOnRotationSphere = Vector3.Transform(positionAboutY, Matrix4X4.CreateRotationZ(angleToTravel));
+				var positionOnRotationSphere = Vector3Ex.Transform(positionAboutY, Matrix4X4.CreateRotationZ(angleToTravel));
 
 				return positionOnRotationSphere;
 			}
 		}
 
 		//Mouse down
-		public void OnMouseDown(Vector2 mousePosition, Matrix4X4 screenToLocal, MouseDownType trackType = MouseDownType.Rotation)
+		public void OnMouseDown(Vector2 mousePosition, Matrix4X4 screenToLocal, TrackBallTransformType trackType = TrackBallTransformType.Rotation)
 		{
 			//if (currentTrackingType == MouseDownType.None)
 			{
-				currentTrackingType = trackType;
-				switch (currentTrackingType)
+				CurrentTrackingType = trackType;
+				switch (CurrentTrackingType)
 				{
-					case MouseDownType.Rotation:
+					case TrackBallTransformType.Rotation:
 						mouseDownPosition = mousePosition;
 						break;
 
-					case MouseDownType.Translation:
+					case TrackBallTransformType.Translation:
 						localToScreenTransform = Matrix4X4.Invert(screenToLocal);
 						lastTranslationMousePosition = mousePosition;
 						break;
 
-					case MouseDownType.Scale:
+					case TrackBallTransformType.Scale:
 						lastScaleMousePosition = mousePosition;
 						break;
 
@@ -144,56 +117,36 @@ namespace MatterHackers.VectorMath
 		}
 
 		//Mouse drag, calculate rotation
-		public void OnMouseMove(Vector2 mousePosition, bool rotateOnZ)
+		public void OnMouseMove(Vector2 mousePosition)
 		{
-			switch (currentTrackingType)
+			switch (CurrentTrackingType)
 			{
-				case MouseDownType.Rotation:
-					var activeRotationQuaternion = Quaternion.Identity;
+				case TrackBallTransformType.Rotation:
+					Quaternion activeRotationQuaternion = GetRotationForMove(ScreenCenter, world, TrackBallRadius, mouseDownPosition, mousePosition, false);
 
-					//Map the point to the sphere
-					moveSpherePosition = MapMoveToSphere(mousePosition, rotateOnZ);
-
-					//Return the quaternion equivalent to the rotation
-					//Compute the vector perpendicular to the begin and end vectors
-					var rotationStart3D = new Vector3(0, 0, 1);
-					if(rotateOnZ)
+					if (activeRotationQuaternion != Quaternion.Identity)
 					{
-						rotationStart3D = new Vector3(1, 0, 0);
-					}
-					Vector3 Perp = Vector3.Cross(rotationStart3D, moveSpherePosition);
-
-					//Compute the length of the perpendicular vector
-					if (Perp.Length > Epsilon)
-					{
-						//if its non-zero
-						//We're ok, so return the perpendicular vector as the transform after all
-						activeRotationQuaternion.X = Perp.X;
-						activeRotationQuaternion.Y = Perp.Y;
-						activeRotationQuaternion.Z = Perp.Z;
-						//In the quaternion values, w is cosine (theta / 2), where theta is the rotation angle
-						activeRotationQuaternion.W = Vector3.Dot(rotationStart3D, moveSpherePosition);
-
 						mouseDownPosition = mousePosition;
 						world.RotationMatrix = world.RotationMatrix * Matrix4X4.CreateRotation(activeRotationQuaternion);
 						OnTransformChanged(null);
 					}
+
 					break;
 
-				case MouseDownType.Translation:
+				case TrackBallTransformType.Translation:
 					{
 						Vector2 mouseDelta = mousePosition - lastTranslationMousePosition;
-						Vector2 scaledDelta = mouseDelta / world.ScreenCenter.X * 4.75;
+						Vector2 scaledDelta = mouseDelta / this.ScreenCenter.X * 4.75;
 						Vector3 offset = new Vector3(scaledDelta.X, scaledDelta.Y, 0);
-						offset = Vector3.TransformPosition(offset, Matrix4X4.Invert(world.RotationMatrix));
-						offset = Vector3.TransformPosition(offset, localToScreenTransform);
+						offset = Vector3Ex.TransformPosition(offset, Matrix4X4.Invert(world.RotationMatrix));
+						offset = Vector3Ex.TransformPosition(offset, localToScreenTransform);
 						world.TranslationMatrix = world.TranslationMatrix * Matrix4X4.CreateTranslation(offset);
 						lastTranslationMousePosition = mousePosition;
 						OnTransformChanged(null);
 					}
 					break;
 
-				case MouseDownType.Scale:
+				case TrackBallTransformType.Scale:
 					{
 						Vector2 mouseDelta = mousePosition - lastScaleMousePosition;
 						double zoomDelta = 1;
@@ -216,24 +169,56 @@ namespace MatterHackers.VectorMath
 			}
 		}
 
+		public static Quaternion GetRotationForMove(Vector2 screenCenter, WorldView world, double trackBallRadius, Vector2 startPosition, Vector2 endPosition, bool rotateOnZ)
+		{
+			var activeRotationQuaternion = Quaternion.Identity;
+
+			//Map the point to the sphere
+			var moveSpherePosition = MapMoveToSphere(screenCenter, world, trackBallRadius, startPosition, endPosition, rotateOnZ);
+
+			//Return the quaternion equivalent to the rotation
+			//Compute the vector perpendicular to the begin and end vectors
+			var rotationStart3D = new Vector3(0, 0, 1);
+			if (rotateOnZ)
+			{
+				rotationStart3D = new Vector3(1, 0, 0);
+			}
+			Vector3 perp = rotationStart3D.Cross(moveSpherePosition);
+
+			//Compute the length of the perpendicular vector
+			double epsilon = 1.0e-5;
+			if (perp.Length > epsilon)
+			{
+				//if its non-zero
+				//We're ok, so return the perpendicular vector as the transform after all
+				activeRotationQuaternion.X = perp.X;
+				activeRotationQuaternion.Y = perp.Y;
+				activeRotationQuaternion.Z = perp.Z;
+				//In the quaternion values, w is cosine (theta / 2), where theta is the rotation angle
+				activeRotationQuaternion.W = -rotationStart3D.Dot(moveSpherePosition);
+			}
+
+			return activeRotationQuaternion;
+		}
+
 		public void OnMouseUp()
 		{
-			switch (currentTrackingType)
+			switch (CurrentTrackingType)
 			{
-				case MouseDownType.Rotation:
+				case TrackBallTransformType.Rotation:
 					break;
 
-				case MouseDownType.Translation:
+				case TrackBallTransformType.Translation:
 					//currentTranslationMatrix = Matrix4X4.Identity;
 					break;
 
-				case MouseDownType.Scale:
+				case TrackBallTransformType.Scale:
 					break;
 
 				default:
 					throw new NotImplementedException();
 			}
-			currentTrackingType = MouseDownType.None;
+			CurrentTrackingType = TrackBallTransformType.None;
 		}
 
 		public void OnMouseWheel(int wheelDelta)
@@ -257,18 +242,6 @@ namespace MatterHackers.VectorMath
 			world.OnTransformChanged(x);
 		}
 
-		public double TrackBallRadius
-		{
-			get
-			{
-				return rotationTrackingRadiusPixels;
-			}
-
-			set
-			{
-				rotationTrackingRadiusPixels = value;
-			}
-		}
-
+		public double TrackBallRadius { get; set; }
 	}
 }
