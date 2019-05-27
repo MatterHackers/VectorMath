@@ -20,172 +20,91 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
- */
+*/
 
 #endregion --- License ---
 
 using System;
-using System.Linq;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace MatterHackers.VectorMath
 {
-	/// <summary>Represents a 4D vector using four double-precision floating-point numbers.</summary>
+	/// <summary>Represents a 2D vector using two double-precision floating-point numbers.</summary>
+	[JsonObject]
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Vector4 : IEquatable<Vector4>
+	public struct Vector2Float : IEquatable<Vector2Float>
 	{
 		#region Fields
 
-		/// <summary>
-		/// The X component of the Vector4d.
-		/// </summary>
-		public double X;
+		/// <summary>The X coordinate of this instance.</summary>
+		public float X;
+
+		/// <summary>The Y coordinate of this instance.</summary>
+		public float Y;
 
 		/// <summary>
-		/// The Y component of the Vector4d.
+		/// Defines a unit-length Vector2d that points towards the X-axis.
 		/// </summary>
-		public double Y;
+		public static Vector2Float UnitX = new Vector2Float(1, 0);
 
 		/// <summary>
-		/// The Z component of the Vector4d.
+		/// Defines a unit-length Vector2d that points towards the Y-axis.
 		/// </summary>
-		public double Z;
+		public static Vector2Float UnitY = new Vector2Float(0, 1);
 
 		/// <summary>
-		/// The W component of the Vector4d.
+		/// Defines a zero-length Vector2d.
 		/// </summary>
-		public double W;
-
-		/// <summary>
-		/// Defines a unit-length Vector4d that points towards the X-axis.
-		/// </summary>
-		public static Vector4 UnitX = new Vector4(1, 0, 0, 0);
-
-		/// <summary>
-		/// Defines a unit-length Vector4d that points towards the Y-axis.
-		/// </summary>
-		public static Vector4 UnitY = new Vector4(0, 1, 0, 0);
-
-		/// <summary>
-		/// Defines a unit-length Vector4d that points towards the Z-axis.
-		/// </summary>
-		public static Vector4 UnitZ = new Vector4(0, 0, 1, 0);
-
-		/// <summary>
-		/// Defines a unit-length Vector4d that points towards the W-axis.
-		/// </summary>
-		public static Vector4 UnitW = new Vector4(0, 0, 0, 1);
-
-		/// <summary>
-		/// Defines a zero-length Vector4d.
-		/// </summary>
-		public static Vector4 Zero = new Vector4(0, 0, 0, 0);
+		public static Vector2Float Zero = new Vector2Float(0, 0);
 
 		/// <summary>
 		/// Defines an instance with all components set to 1.
 		/// </summary>
-		public static readonly Vector4 One = new Vector4(1, 1, 1, 1);
+		public static readonly Vector2Float One = new Vector2Float(1, 1);
 
 		/// <summary>
-		/// Defines the size of the Vector4d struct in bytes.
+		/// Defines the size of the Vector2d struct in bytes.
 		/// </summary>
-		public static readonly int SizeInBytes = Marshal.SizeOf(new Vector4());
+		public static readonly int SizeInBytes = Marshal.SizeOf(new Vector2Float());
 
 		#endregion Fields
 
 		#region Constructors
 
-		/// <summary>
-		/// Constructs a new Vector4d.
-		/// </summary>
-		/// <param name="x">The x component of the Vector4d.</param>
-		/// <param name="y">The y component of the Vector4d.</param>
-		/// <param name="z">The z component of the Vector4d.</param>
-		/// <param name="w">The w component of the Vector4d.</param>
-		public Vector4(double x, double y, double z, double w)
+		/// <summary>Constructs left vector with the given coordinates.</summary>
+		/// <param name="x">The X coordinate.</param>
+		/// <param name="y">The Y coordinate.</param>
+		public Vector2Float(double x, double y)
 		{
-			this.X = x;
-			this.Y = y;
-			this.Z = z;
-			this.W = w;
+			this.X = (float)x;
+			this.Y = (float)y;
 		}
 
-		/// <summary>
-		/// Constructs a new Vector4d from the given Vector2d.
-		/// </summary>
-		/// <param name="v">The Vector2d to copy components from.</param>
-		public Vector4(Vector2 v)
+		public Vector2Float(Vector3 vector)
 		{
-			X = v.X;
-			Y = v.Y;
-			Z = 0.0f;
-			W = 0.0f;
+			this.X = (float)vector.X;
+			this.Y = (float)vector.Y;
 		}
 
-		/// <summary>
-		/// Constructs a new Vector4d from the given Vector3d.
-		/// </summary>
-		/// <param name="v">The Vector3d to copy components from.</param>
-		public Vector4(Vector3 v)
+		public Vector2Float(Vector2 vector)
 		{
-			X = v.X;
-			Y = v.Y;
-			Z = v.Z;
-			W = 0.0f;
+			this.X = (float)vector.X;
+			this.Y = (float)vector.Y;
 		}
 
-		/// <summary>
-		/// Constructs a new Vector4d from the specified Vector3d and w component.
-		/// </summary>
-		/// <param name="v">The Vector3d to copy components from.</param>
-		/// <param name="w">The w component of the new Vector4.</param>
-		public Vector4(Vector3 v, double w)
+		public Vector2Float(Vector3Float vector)
 		{
-			X = v.X;
-			Y = v.Y;
-			Z = v.Z;
-			this.W = w;
-		}
-
-		/// <summary>
-		/// Constructs a new Vector4d from the given Vector4d.
-		/// </summary>
-		/// <param name="v">The Vector4d to copy components from.</param>
-		public Vector4(Vector4 v)
-		{
-			X = v.X;
-			Y = v.Y;
-			Z = v.Z;
-			W = v.W;
+			this.X = vector.X;
+			this.Y = vector.Y;
 		}
 
 		#endregion Constructors
 
-		public static Vector4 Parse(string s)
-		{
-			var result = Vector4.Zero;
-
-			var values = s.Split(',').Select(sValue =>
-			{
-				double.TryParse(sValue, out double number);
-				return number;
-			}).ToArray();
-
-			for (int i = 0; i < Math.Min(4, values.Length); i++)
-			{
-				result[i] = values[i];
-			}
-
-			return result;
-		}
-
-
-		#region Public Members
-
 		#region Properties
 
-		public double this[int index]
+		public float this[int index]
 		{
 			get
 			{
@@ -196,12 +115,6 @@ namespace MatterHackers.VectorMath
 
 					case 1:
 						return Y;
-
-					case 2:
-						return Z;
-
-					case 3:
-						return W;
 
 					default:
 						return 0;
@@ -220,42 +133,45 @@ namespace MatterHackers.VectorMath
 						Y = value;
 						break;
 
-					case 2:
-						Z = value;
-						break;
-
-					case 3:
-						W = value;
-						break;
-
 					default:
 						throw new Exception();
 				}
 			}
 		}
 
+		/// <summary>
+		/// Get the delta angle from start to end relative to this
+		/// </summary>
+		/// <param name="startPosition"></param>
+		/// <param name="endPosition"></param>
+		public double GetDeltaAngle(Vector2Float startPosition, Vector2Float endPosition)
+		{
+			startPosition -= this;
+			var startAngle = Math.Atan2(startPosition.Y, startPosition.X);
+			startAngle = startAngle < 0 ? startAngle + MathHelper.Tau : startAngle;
+
+			endPosition -= this;
+			var endAngle = Math.Atan2(endPosition.Y, endPosition.X);
+			endAngle = endAngle < 0 ? endAngle + MathHelper.Tau : endAngle;
+
+			return endAngle - startAngle;
+		}
+
 		#endregion Properties
 
-		#region Instance
+		#region Public Members
 
-		#region public double Length
+		#region Instance
 
 		/// <summary>
 		/// Gets the length (magnitude) of the vector.
 		/// </summary>
-		/// <see cref="LengthFast"/>
 		/// <seealso cref="LengthSquared"/>
-		public double Length
+		[JsonIgnore]
+		public float Length
 		{
-			get
-			{
-				return System.Math.Sqrt(X * X + Y * Y + Z * Z + W * W);
-			}
+			get => (float)System.Math.Sqrt(X * X + Y * Y);
 		}
-
-		#endregion public double Length
-
-		#region public double LengthSquared
 
 		/// <summary>
 		/// Gets the square of the vector length (magnitude).
@@ -265,44 +181,75 @@ namespace MatterHackers.VectorMath
 		/// for comparisons.
 		/// </remarks>
 		/// <see cref="Length"/>
+		[JsonIgnore]
 		public double LengthSquared
 		{
-			get
-			{
-				return X * X + Y * Y + Z * Z + W * W;
-			}
+			get => X * X + Y * Y;
 		}
 
-		#endregion public double LengthSquared
+		public void Rotate(double radians)
+		{
+			this = Vector2Float.Rotate(this, radians);
+		}
+
+		public double GetAngle()
+		{
+			return System.Math.Atan2(Y, X);
+		}
+
+		public double GetAngle0To2PI()
+		{
+			return MathHelper.Range0ToTau(GetAngle());
+		}
+
+		#region public Vector2d PerpendicularRight
+
+		/// <summary>
+		/// Gets the perpendicular vector on the right side of this vector.
+		/// </summary>
+		public Vector2Float GetPerpendicularRight()
+		{
+			return new Vector2Float(Y, -X);
+		}
+
+		#endregion public Vector2d PerpendicularRight
+
+		#region public Vector2d PerpendicularLeft
+
+		/// <summary>
+		/// Gets the perpendicular vector on the left side of this vector.
+		/// </summary>
+		public Vector2Float GetPerpendicularLeft()
+		{
+			return new Vector2Float(-Y, X);
+		}
+
+		#endregion public Vector2d PerpendicularLeft
 
 		#region public void Normalize()
 
 		/// <summary>
-		/// Scales the Vector4d to unit length.
+		/// Returns a normalized Vector of this.
+		/// </summary>
+		/// <returns></returns>
+		public Vector2Float GetNormal()
+		{
+			Vector2Float temp = this;
+			temp.Normalize();
+			return temp;
+		}
+
+		/// <summary>
+		/// Scales the Vector2 to unit length.
 		/// </summary>
 		public void Normalize()
 		{
-			double scale = 1.0 / this.Length;
+			float scale = 1.0f / Length;
 			X *= scale;
 			Y *= scale;
-			Z *= scale;
-			W *= scale;
 		}
 
 		#endregion public void Normalize()
-
-		public bool IsValid()
-		{
-			if(double.IsNaN(X) || double.IsInfinity(X)
-				|| double.IsNaN(Y) || double.IsInfinity(Y)
-				|| double.IsNaN(Z) || double.IsInfinity(Z)
-				|| double.IsNaN(W) || double.IsInfinity(W))
-			{
-				return false;
-			}
-
-			return true;
-		}
 
 		#endregion Instance
 
@@ -316,7 +263,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">Left operand.</param>
 		/// <param name="b">Right operand.</param>
 		/// <returns>Result of operation.</returns>
-		public static Vector4 Add(Vector4 a, Vector4 b)
+		public static Vector2Float Add(Vector2Float a, Vector2Float b)
 		{
 			Add(ref a, ref b, out a);
 			return a;
@@ -328,9 +275,9 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">Left operand.</param>
 		/// <param name="b">Right operand.</param>
 		/// <param name="result">Result of operation.</param>
-		public static void Add(ref Vector4 a, ref Vector4 b, out Vector4 result)
+		public static void Add(ref Vector2Float a, ref Vector2Float b, out Vector2Float result)
 		{
-			result = new Vector4(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
+			result = new Vector2Float(a.X + b.X, a.Y + b.Y);
 		}
 
 		#endregion Add
@@ -343,7 +290,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">First operand</param>
 		/// <param name="b">Second operand</param>
 		/// <returns>Result of subtraction</returns>
-		public static Vector4 Subtract(Vector4 a, Vector4 b)
+		public static Vector2Float Subtract(Vector2Float a, Vector2Float b)
 		{
 			Subtract(ref a, ref b, out a);
 			return a;
@@ -355,9 +302,9 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">First operand</param>
 		/// <param name="b">Second operand</param>
 		/// <param name="result">Result of subtraction</param>
-		public static void Subtract(ref Vector4 a, ref Vector4 b, out Vector4 result)
+		public static void Subtract(ref Vector2Float a, ref Vector2Float b, out Vector2Float result)
 		{
-			result = new Vector4(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
+			result = new Vector2Float(a.X - b.X, a.Y - b.Y);
 		}
 
 		#endregion Subtract
@@ -370,7 +317,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <returns>Result of the operation.</returns>
-		public static Vector4 Multiply(Vector4 vector, double scale)
+		public static Vector2Float Multiply(Vector2Float vector, double scale)
 		{
 			Multiply(ref vector, scale, out vector);
 			return vector;
@@ -382,9 +329,9 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <param name="result">Result of the operation.</param>
-		public static void Multiply(ref Vector4 vector, double scale, out Vector4 result)
+		public static void Multiply(ref Vector2Float vector, double scale, out Vector2Float result)
 		{
-			result = new Vector4(vector.X * scale, vector.Y * scale, vector.Z * scale, vector.W * scale);
+			result = new Vector2Float(vector.X * scale, vector.Y * scale);
 		}
 
 		/// <summary>
@@ -393,7 +340,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <returns>Result of the operation.</returns>
-		public static Vector4 Multiply(Vector4 vector, Vector4 scale)
+		public static Vector2Float Multiply(Vector2Float vector, Vector2Float scale)
 		{
 			Multiply(ref vector, ref scale, out vector);
 			return vector;
@@ -405,9 +352,9 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <param name="result">Result of the operation.</param>
-		public static void Multiply(ref Vector4 vector, ref Vector4 scale, out Vector4 result)
+		public static void Multiply(ref Vector2Float vector, ref Vector2Float scale, out Vector2Float result)
 		{
-			result = new Vector4(vector.X * scale.X, vector.Y * scale.Y, vector.Z * scale.Z, vector.W * scale.W);
+			result = new Vector2Float(vector.X * scale.X, vector.Y * scale.Y);
 		}
 
 		#endregion Multiply
@@ -420,7 +367,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <returns>Result of the operation.</returns>
-		public static Vector4 Divide(Vector4 vector, double scale)
+		public static Vector2Float Divide(Vector2Float vector, double scale)
 		{
 			Divide(ref vector, scale, out vector);
 			return vector;
@@ -432,7 +379,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <param name="result">Result of the operation.</param>
-		public static void Divide(ref Vector4 vector, double scale, out Vector4 result)
+		public static void Divide(ref Vector2Float vector, double scale, out Vector2Float result)
 		{
 			Multiply(ref vector, 1 / scale, out result);
 		}
@@ -443,7 +390,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <returns>Result of the operation.</returns>
-		public static Vector4 Divide(Vector4 vector, Vector4 scale)
+		public static Vector2Float Divide(Vector2Float vector, Vector2Float scale)
 		{
 			Divide(ref vector, ref scale, out vector);
 			return vector;
@@ -455,9 +402,9 @@ namespace MatterHackers.VectorMath
 		/// <param name="vector">Left operand.</param>
 		/// <param name="scale">Right operand.</param>
 		/// <param name="result">Result of the operation.</param>
-		public static void Divide(ref Vector4 vector, ref Vector4 scale, out Vector4 result)
+		public static void Divide(ref Vector2Float vector, ref Vector2Float scale, out Vector2Float result)
 		{
-			result = new Vector4(vector.X / scale.X, vector.Y / scale.Y, vector.Z / scale.Z, vector.W / scale.W);
+			result = new Vector2Float(vector.X / scale.X, vector.Y / scale.Y);
 		}
 
 		#endregion Divide
@@ -470,12 +417,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">First operand</param>
 		/// <param name="b">Second operand</param>
 		/// <returns>The component-wise minimum</returns>
-		public static Vector4 Min(Vector4 a, Vector4 b)
+		public static Vector2Float Min(Vector2Float a, Vector2Float b)
 		{
 			a.X = a.X < b.X ? a.X : b.X;
 			a.Y = a.Y < b.Y ? a.Y : b.Y;
-			a.Z = a.Z < b.Z ? a.Z : b.Z;
-			a.W = a.W < b.W ? a.W : b.W;
 			return a;
 		}
 
@@ -485,12 +430,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">First operand</param>
 		/// <param name="b">Second operand</param>
 		/// <param name="result">The component-wise minimum</param>
-		public static void Min(ref Vector4 a, ref Vector4 b, out Vector4 result)
+		public static void Min(ref Vector2Float a, ref Vector2Float b, out Vector2Float result)
 		{
 			result.X = a.X < b.X ? a.X : b.X;
 			result.Y = a.Y < b.Y ? a.Y : b.Y;
-			result.Z = a.Z < b.Z ? a.Z : b.Z;
-			result.W = a.W < b.W ? a.W : b.W;
 		}
 
 		#endregion Min
@@ -503,12 +446,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">First operand</param>
 		/// <param name="b">Second operand</param>
 		/// <returns>The component-wise maximum</returns>
-		public static Vector4 Max(Vector4 a, Vector4 b)
+		public static Vector2Float Max(Vector2Float a, Vector2Float b)
 		{
 			a.X = a.X > b.X ? a.X : b.X;
 			a.Y = a.Y > b.Y ? a.Y : b.Y;
-			a.Z = a.Z > b.Z ? a.Z : b.Z;
-			a.W = a.W > b.W ? a.W : b.W;
 			return a;
 		}
 
@@ -518,12 +459,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="a">First operand</param>
 		/// <param name="b">Second operand</param>
 		/// <param name="result">The component-wise maximum</param>
-		public static void Max(ref Vector4 a, ref Vector4 b, out Vector4 result)
+		public static void Max(ref Vector2Float a, ref Vector2Float b, out Vector2Float result)
 		{
 			result.X = a.X > b.X ? a.X : b.X;
 			result.Y = a.Y > b.Y ? a.Y : b.Y;
-			result.Z = a.Z > b.Z ? a.Z : b.Z;
-			result.W = a.W > b.W ? a.W : b.W;
 		}
 
 		#endregion Max
@@ -537,12 +476,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="min">Minimum vector</param>
 		/// <param name="max">Maximum vector</param>
 		/// <returns>The clamped vector</returns>
-		public static Vector4 Clamp(Vector4 vec, Vector4 min, Vector4 max)
+		public static Vector2Float Clamp(Vector2Float vec, Vector2Float min, Vector2Float max)
 		{
 			vec.X = vec.X < min.X ? min.X : vec.X > max.X ? max.X : vec.X;
 			vec.Y = vec.Y < min.Y ? min.Y : vec.Y > max.Y ? max.Y : vec.Y;
-			vec.Z = vec.X < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
-			vec.W = vec.Y < min.W ? min.W : vec.W > max.W ? max.W : vec.W;
 			return vec;
 		}
 
@@ -553,12 +490,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="min">Minimum vector</param>
 		/// <param name="max">Maximum vector</param>
 		/// <param name="result">The clamped vector</param>
-		public static void Clamp(ref Vector4 vec, ref Vector4 min, ref Vector4 max, out Vector4 result)
+		public static void Clamp(ref Vector2Float vec, ref Vector2Float min, ref Vector2Float max, out Vector2Float result)
 		{
 			result.X = vec.X < min.X ? min.X : vec.X > max.X ? max.X : vec.X;
 			result.Y = vec.Y < min.Y ? min.Y : vec.Y > max.Y ? max.Y : vec.Y;
-			result.Z = vec.X < min.Z ? min.Z : vec.Z > max.Z ? max.Z : vec.Z;
-			result.W = vec.Y < min.W ? min.W : vec.W > max.W ? max.W : vec.W;
 		}
 
 		#endregion Clamp
@@ -570,13 +505,11 @@ namespace MatterHackers.VectorMath
 		/// </summary>
 		/// <param name="vec">The input vector</param>
 		/// <returns>The normalized vector</returns>
-		public static Vector4 Normalize(Vector4 vec)
+		public static Vector2Float Normalize(Vector2Float vec)
 		{
-			double scale = 1.0 / vec.Length;
+			float scale = 1.0f / vec.Length;
 			vec.X *= scale;
 			vec.Y *= scale;
-			vec.Z *= scale;
-			vec.W *= scale;
 			return vec;
 		}
 
@@ -585,13 +518,11 @@ namespace MatterHackers.VectorMath
 		/// </summary>
 		/// <param name="vec">The input vector</param>
 		/// <param name="result">The normalized vector</param>
-		public static void Normalize(ref Vector4 vec, out Vector4 result)
+		public static void Normalize(ref Vector2Float vec, out Vector2Float result)
 		{
-			double scale = 1.0 / vec.Length;
+			float scale = 1.0f / vec.Length;
 			result.X = vec.X * scale;
 			result.Y = vec.Y * scale;
-			result.Z = vec.Z * scale;
-			result.W = vec.W * scale;
 		}
 
 		#endregion Normalize
@@ -599,28 +530,65 @@ namespace MatterHackers.VectorMath
 		#region Dot
 
 		/// <summary>
-		/// Calculate the dot product of two vectors
+		/// Calculate the dot (scalar) product of two vectors
 		/// </summary>
 		/// <param name="left">First operand</param>
 		/// <param name="right">Second operand</param>
 		/// <returns>The dot product of the two inputs</returns>
-		public static double Dot(Vector4 left, Vector4 right)
+		public static double Dot(Vector2Float left, Vector2Float right)
 		{
-			return left.X * right.X + left.Y * right.Y + left.Z * right.Z + left.W * right.W;
+			return left.X * right.X + left.Y * right.Y;
 		}
 
 		/// <summary>
-		/// Calculate the dot product of two vectors
+		/// Calculate the dot (scalar) product of two vectors
 		/// </summary>
 		/// <param name="left">First operand</param>
 		/// <param name="right">Second operand</param>
 		/// <param name="result">The dot product of the two inputs</param>
-		public static void Dot(ref Vector4 left, ref Vector4 right, out double result)
+		public static void Dot(ref Vector2Float left, ref Vector2Float right, out double result)
 		{
-			result = left.X * right.X + left.Y * right.Y + left.Z * right.Z + left.W * right.W;
+			result = left.X * right.X + left.Y * right.Y;
 		}
 
 		#endregion Dot
+
+		#region Cross
+
+		/// <summary>
+		/// Calculate the cross product of two vectors
+		/// </summary>
+		/// <param name="left">First operand</param>
+		/// <param name="right">Second operand</param>
+		/// <returns>The cross product of the two inputs</returns>
+		public static double Cross(Vector2Float left, Vector2Float right)
+		{
+			return left.X * right.Y - left.Y * right.X;
+		}
+
+		#endregion Cross
+
+		#region Rotate
+
+		public static Vector2Float Rotate(Vector2Float toRotate, double radians)
+		{
+			Vector2Float temp;
+			Rotate(ref toRotate, radians, out temp);
+			return temp;
+		}
+
+		public static void Rotate(ref Vector2Float input, double radians, out Vector2Float output)
+		{
+			float Cos, Sin;
+
+			Cos = (float)System.Math.Cos(radians);
+			Sin = (float)System.Math.Sin(radians);
+
+			output.X = input.X * Cos - input.Y * Sin;
+			output.Y = input.Y * Cos + input.X * Sin;
+		}
+
+		#endregion Rotate
 
 		#region Lerp
 
@@ -631,12 +599,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="b">Second input vector</param>
 		/// <param name="blend">The blend factor. a when blend=0, b when blend=1.</param>
 		/// <returns>a when blend=0, b when blend=1, and a linear combination otherwise</returns>
-		public static Vector4 Lerp(Vector4 a, Vector4 b, double blend)
+		public static Vector2Float Lerp(Vector2Float a, Vector2Float b, float blend)
 		{
 			a.X = blend * (b.X - a.X) + a.X;
 			a.Y = blend * (b.Y - a.Y) + a.Y;
-			a.Z = blend * (b.Z - a.Z) + a.Z;
-			a.W = blend * (b.W - a.W) + a.W;
 			return a;
 		}
 
@@ -647,12 +613,10 @@ namespace MatterHackers.VectorMath
 		/// <param name="b">Second input vector</param>
 		/// <param name="blend">The blend factor. a when blend=0, b when blend=1.</param>
 		/// <param name="result">a when blend=0, b when blend=1, and a linear combination otherwise</param>
-		public static void Lerp(ref Vector4 a, ref Vector4 b, double blend, out Vector4 result)
+		public static void Lerp(ref Vector2Float a, ref Vector2Float b, float blend, out Vector2Float result)
 		{
 			result.X = blend * (b.X - a.X) + a.X;
 			result.Y = blend * (b.Y - a.Y) + a.Y;
-			result.Z = blend * (b.Z - a.Z) + a.Z;
-			result.W = blend * (b.W - a.W) + a.W;
 		}
 
 		#endregion Lerp
@@ -668,7 +632,7 @@ namespace MatterHackers.VectorMath
 		/// <param name="u">First Barycentric Coordinate</param>
 		/// <param name="v">Second Barycentric Coordinate</param>
 		/// <returns>a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise</returns>
-		public static Vector4 BaryCentric(Vector4 a, Vector4 b, Vector4 c, double u, double v)
+		public static Vector2Float BaryCentric(Vector2Float a, Vector2Float b, Vector2Float c, float u, float v)
 		{
 			return a + u * (b - a) + v * (c - a);
 		}
@@ -680,11 +644,11 @@ namespace MatterHackers.VectorMath
 		/// <param name="u">First Barycentric Coordinate.</param>
 		/// <param name="v">Second Barycentric Coordinate.</param>
 		/// <param name="result">Output Vector. a when u=v=0, b when u=1,v=0, c when u=0,v=1, and a linear combination of a,b,c otherwise</param>
-		public static void BaryCentric(ref Vector4 a, ref Vector4 b, ref Vector4 c, double u, double v, out Vector4 result)
+		public static void BaryCentric(ref Vector2Float a, ref Vector2Float b, ref Vector2Float c, double u, double v, out Vector2Float result)
 		{
 			result = a; // copy
 
-			Vector4 temp = b; // copy
+			Vector2Float temp = b; // copy
 			Subtract(ref temp, ref a, out temp);
 			Multiply(ref temp, u, out temp);
 			Add(ref result, ref temp, out result);
@@ -699,39 +663,15 @@ namespace MatterHackers.VectorMath
 
 		#region Transform
 
-		/// <summary>Transform a Vector by the given Matrix</summary>
-		/// <param name="vec">The vector to transform</param>
-		/// <param name="mat">The desired transformation</param>
-		/// <returns>The transformed vector</returns>
-		public static Vector4 Transform(Vector4 vec, Matrix4X4 mat)
-		{
-			Vector4 result;
-			Transform(vec, ref mat, out result);
-			return result;
-		}
-
-		/// <summary>Transform a Vector by the given Matrix</summary>
-		/// <param name="vec">The vector to transform</param>
-		/// <param name="mat">The desired transformation</param>
-		/// <param name="result">The transformed vector</param>
-		public static void Transform(Vector4 vec, ref Matrix4X4 mat, out Vector4 result)
-		{
-			result = new Vector4(
-				vec.X * mat.Row0.X + vec.Y * mat.Row1.X + vec.Z * mat.Row2.X + vec.W * mat.Row3.X,
-				vec.X * mat.Row0.Y + vec.Y * mat.Row1.Y + vec.Z * mat.Row2.Y + vec.W * mat.Row3.Y,
-				vec.X * mat.Row0.Z + vec.Y * mat.Row1.Z + vec.Z * mat.Row2.Z + vec.W * mat.Row3.Z,
-				vec.X * mat.Row0.W + vec.Y * mat.Row1.W + vec.Z * mat.Row2.W + vec.W * mat.Row3.W);
-		}
-
 		/// <summary>
 		/// Transforms a vector by a quaternion rotation.
 		/// </summary>
 		/// <param name="vec">The vector to transform.</param>
 		/// <param name="quat">The quaternion to rotate the vector by.</param>
 		/// <returns>The result of the operation.</returns>
-		public static Vector4 Transform(Vector4 vec, Quaternion quat)
+		public static Vector2Float Transform(Vector2Float vec, Quaternion quat)
 		{
-			Vector4 result;
+			Vector2Float result;
 			Transform(ref vec, ref quat, out result);
 			return result;
 		}
@@ -742,63 +682,103 @@ namespace MatterHackers.VectorMath
 		/// <param name="vec">The vector to transform.</param>
 		/// <param name="quat">The quaternion to rotate the vector by.</param>
 		/// <param name="result">The result of the operation.</param>
-		public static void Transform(ref Vector4 vec, ref Quaternion quat, out Vector4 result)
+		public static void Transform(ref Vector2Float vec, ref Quaternion quat, out Vector2Float result)
 		{
-			Quaternion v = new Quaternion(vec.X, vec.Y, vec.Z, vec.W), i, t;
+			Quaternion v = new Quaternion(vec.X, vec.Y, 0, 0), i, t;
 			Quaternion.Invert(ref quat, out i);
 			Quaternion.Multiply(ref quat, ref v, out t);
 			Quaternion.Multiply(ref t, ref i, out v);
 
-			result = new Vector4(v.X, v.Y, v.Z, v.W);
+			result = new Vector2Float(v.X, v.Y);
 		}
 
 		#endregion Transform
 
+		#region ComponentMin
+
+		/// <summary>
+		/// Calculate the component-wise minimum of two vectors
+		/// </summary>
+		/// <param name="a">First operand</param>
+		/// <param name="b">Second operand</param>
+		/// <returns>The component-wise minimum</returns>
+		public static Vector2Float ComponentMin(Vector2Float a, Vector2Float b)
+		{
+			a.X = a.X < b.X ? a.X : b.X;
+			a.Y = a.Y < b.Y ? a.Y : b.Y;
+			return a;
+		}
+
+		/// <summary>
+		/// Calculate the component-wise minimum of two vectors
+		/// </summary>
+		/// <param name="a">First operand</param>
+		/// <param name="b">Second operand</param>
+		/// <param name="result">The component-wise minimum</param>
+		public static void ComponentMin(ref Vector2Float a, ref Vector2Float b, out Vector2Float result)
+		{
+			result.X = a.X < b.X ? a.X : b.X;
+			result.Y = a.Y < b.Y ? a.Y : b.Y;
+		}
+
+		#endregion ComponentMin
+
+		#region ComponentMax
+
+		/// <summary>
+		/// Calculate the component-wise maximum of two vectors
+		/// </summary>
+		/// <param name="a">First operand</param>
+		/// <param name="b">Second operand</param>
+		/// <returns>The component-wise maximum</returns>
+		public static Vector2Float ComponentMax(Vector2Float a, Vector2Float b)
+		{
+			a.X = a.X > b.X ? a.X : b.X;
+			a.Y = a.Y > b.Y ? a.Y : b.Y;
+			return a;
+		}
+
+		/// <summary>
+		/// Calculate the component-wise maximum of two vectors
+		/// </summary>
+		/// <param name="a">First operand</param>
+		/// <param name="b">Second operand</param>
+		/// <param name="result">The component-wise maximum</param>
+		public static void ComponentMax(ref Vector2Float a, ref Vector2Float b, out Vector2Float result)
+		{
+			result.X = a.X > b.X ? a.X : b.X;
+			result.Y = a.Y > b.Y ? a.Y : b.Y;
+		}
+
+		#endregion ComponentMax
+
 		#endregion Static
-
-		#region Swizzle
-
-		/// <summary>
-		/// Gets or sets an OpenTK.Vector2d with the X and Y components of this instance.
-		/// </summary>
-		public Vector2 Xy { get { return new Vector2(X, Y); } set { X = value.X; Y = value.Y; } }
-
-		/// <summary>
-		/// Gets or sets an OpenTK.Vector3d with the X, Y and Z components of this instance.
-		/// </summary>
-		public Vector3 Xyz { get { return new Vector3(X, Y, Z); } set { X = value.X; Y = value.Y; Z = value.Z; } }
-
-		#endregion Swizzle
 
 		#region Operators
 
 		/// <summary>
 		/// Adds two instances.
 		/// </summary>
-		/// <param name="left">The first instance.</param>
-		/// <param name="right">The second instance.</param>
-		/// <returns>The result of the calculation.</returns>
-		public static Vector4 operator +(Vector4 left, Vector4 right)
+		/// <param name="left">The left instance.</param>
+		/// <param name="right">The right instance.</param>
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator +(Vector2Float left, Vector2Float right)
 		{
 			left.X += right.X;
 			left.Y += right.Y;
-			left.Z += right.Z;
-			left.W += right.W;
 			return left;
 		}
 
 		/// <summary>
 		/// Subtracts two instances.
 		/// </summary>
-		/// <param name="left">The first instance.</param>
-		/// <param name="right">The second instance.</param>
-		/// <returns>The result of the calculation.</returns>
-		public static Vector4 operator -(Vector4 left, Vector4 right)
+		/// <param name="left">The left instance.</param>
+		/// <param name="right">The right instance.</param>
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator -(Vector2Float left, Vector2Float right)
 		{
 			left.X -= right.X;
 			left.Y -= right.Y;
-			left.Z -= right.Z;
-			left.W -= right.W;
 			return left;
 		}
 
@@ -806,13 +786,11 @@ namespace MatterHackers.VectorMath
 		/// Negates an instance.
 		/// </summary>
 		/// <param name="vec">The instance.</param>
-		/// <returns>The result of the calculation.</returns>
-		public static Vector4 operator -(Vector4 vec)
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator -(Vector2Float vec)
 		{
 			vec.X = -vec.X;
 			vec.Y = -vec.Y;
-			vec.Z = -vec.Z;
-			vec.W = -vec.W;
 			return vec;
 		}
 
@@ -820,29 +798,25 @@ namespace MatterHackers.VectorMath
 		/// Multiplies an instance by a scalar.
 		/// </summary>
 		/// <param name="vec">The instance.</param>
-		/// <param name="scale">The scalar.</param>
-		/// <returns>The result of the calculation.</returns>
-		public static Vector4 operator *(Vector4 vec, double scale)
+		/// <param name="f">The scalar.</param>
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator *(Vector2Float vec, float f)
 		{
-			vec.X *= scale;
-			vec.Y *= scale;
-			vec.Z *= scale;
-			vec.W *= scale;
+			vec.X *= f;
+			vec.Y *= f;
 			return vec;
 		}
 
 		/// <summary>
-		/// Multiplies an instance by a scalar.
+		/// Multiply an instance by a scalar.
 		/// </summary>
-		/// <param name="scale">The scalar.</param>
+		/// <param name="f">The scalar.</param>
 		/// <param name="vec">The instance.</param>
-		/// <returns>The result of the calculation.</returns>
-		public static Vector4 operator *(double scale, Vector4 vec)
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator *(float f, Vector2Float vec)
 		{
-			vec.X *= scale;
-			vec.Y *= scale;
-			vec.Z *= scale;
-			vec.W *= scale;
+			vec.X *= f;
+			vec.Y *= f;
 			return vec;
 		}
 
@@ -850,36 +824,47 @@ namespace MatterHackers.VectorMath
 		/// Divides an instance by a scalar.
 		/// </summary>
 		/// <param name="vec">The instance.</param>
-		/// <param name="scale">The scalar.</param>
-		/// <returns>The result of the calculation.</returns>
-		public static Vector4 operator /(Vector4 vec, double scale)
+		/// <param name="f">The scalar.</param>
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator /(Vector2Float vec, float f)
 		{
-			double mult = 1 / scale;
+			float mult = 1.0f / f;
 			vec.X *= mult;
 			vec.Y *= mult;
-			vec.Z *= mult;
-			vec.W *= mult;
+			return vec;
+		}
+
+		/// <summary>
+		/// Divides a scaler by an instance components wise.
+		/// </summary>
+		/// <param name="vec">The scalar.</param>
+		/// <param name="f">The instance.</param>
+		/// <returns>The result of the operation.</returns>
+		public static Vector2Float operator /(float f, Vector2Float vec)
+		{
+			vec.X = f / vec.X;
+			vec.Y = f / vec.Y;
 			return vec;
 		}
 
 		/// <summary>
 		/// Compares two instances for equality.
 		/// </summary>
-		/// <param name="left">The first instance.</param>
-		/// <param name="right">The second instance.</param>
-		/// <returns>True, if left equals right; false otherwise.</returns>
-		public static bool operator ==(Vector4 left, Vector4 right)
+		/// <param name="left">The left instance.</param>
+		/// <param name="right">The right instance.</param>
+		/// <returns>True, if both instances are equal; false otherwise.</returns>
+		public static bool operator ==(Vector2Float left, Vector2Float right)
 		{
 			return left.Equals(right);
 		}
 
 		/// <summary>
-		/// Compares two instances for inequality.
+		/// Compares two instances for ienquality.
 		/// </summary>
-		/// <param name="left">The first instance.</param>
-		/// <param name="right">The second instance.</param>
-		/// <returns>True, if left does not equa lright; false otherwise.</returns>
-		public static bool operator !=(Vector4 left, Vector4 right)
+		/// <param name="left">The left instance.</param>
+		/// <param name="right">The right instance.</param>
+		/// <returns>True, if the instances are not equal; false otherwise.</returns>
+		public static bool operator !=(Vector2Float left, Vector2Float right)
 		{
 			return !left.Equals(right);
 		}
@@ -891,22 +876,12 @@ namespace MatterHackers.VectorMath
 		#region public override string ToString()
 
 		/// <summary>
-		/// Returns a System.String that represents the current Vector4d.
+		/// Returns a System.String that represents the current instance.
 		/// </summary>
 		/// <returns></returns>
 		public override string ToString()
 		{
-			return String.Format("{0}, {1}, {2}, {3}", X, Y, Z, W);
-		}
-
-		/// <summary>
-		/// Returns a System.String that represents the current Vector4d, formatting each element with format.
-		/// </summary>
-		/// <param name="format"></param>
-		/// <returns></returns>
-		public string ToString(string format = "")
-		{
-			return X.ToString(format) + ", " + Y.ToString(format) + ", " + Z.ToString(format) + ", " + W.ToString(format);
+			return String.Format("({0}, {1})", X, Y);
 		}
 
 		#endregion public override string ToString()
@@ -919,42 +894,7 @@ namespace MatterHackers.VectorMath
 		/// <returns>A System.Int32 containing the unique hashcode for this instance.</returns>
 		public override int GetHashCode()
 		{
-			return new { X, Y, Z, W }.GetHashCode();
-		}
-
-		public static ulong GetLongHashCode(double data, ulong hash = 14695981039346656037)
-		{
-			return ComputeHash(BitConverter.GetBytes(data), hash);
-		}
-
-		// FNV-1a (64-bit) non-cryptographic hash function.
-		// Adapted from: http://github.com/jakedouglas/fnv-java
-		public static ulong ComputeHash(byte[] bytes, ulong hash = 14695981039346656037)
-		{
-			const ulong fnv64Prime = 0x100000001b3;
-
-			for (var i = 0; i < bytes.Length; i++)
-			{
-				hash = hash ^ bytes[i];
-				hash *= fnv64Prime;
-			}
-
-			return hash;
-		}
-
-		/// <summary>
-		/// return a 64 bit hash code proposed by Jon Skeet
-		// http://stackoverflow.com/questions/8094867/good-gethashcode-override-for-list-of-foo-objects-respecting-the-order
-		/// </summary>
-		/// <returns></returns>
-		public ulong GetLongHashCode(ulong hash = 14695981039346656037)
-		{
-			hash = GetLongHashCode(X, hash);
-			hash = GetLongHashCode(Y, hash);
-			hash = GetLongHashCode(Z, hash);
-			hash = GetLongHashCode(W, hash);
-
-			return hash;
+			return new { X, Y }.GetHashCode();
 		}
 
 		#endregion public override int GetHashCode()
@@ -968,29 +908,10 @@ namespace MatterHackers.VectorMath
 		/// <returns>True if the instances are equal; false otherwise.</returns>
 		public override bool Equals(object obj)
 		{
-			if (!(obj is Vector4))
+			if (!(obj is Vector2Float))
 				return false;
 
-			return this.Equals((Vector4)obj);
-		}
-
-		/// <summary>
-		/// Indicates whether this instance and a specified object are equal within an error range.
-		/// </summary>
-		/// <param name="OtherVector"></param>
-		/// <param name="ErrorValue"></param>
-		/// <returns>True if the instances are equal; false otherwise.</returns>
-		public bool Equals(Vector4 OtherVector, double ErrorValue)
-		{
-			if ((X < OtherVector.X + ErrorValue && X > OtherVector.X - ErrorValue) &&
-				(Y < OtherVector.Y + ErrorValue && Y > OtherVector.Y - ErrorValue) &&
-				(Z < OtherVector.Z + ErrorValue && Z > OtherVector.Z - ErrorValue) &&
-				(W < OtherVector.W + ErrorValue && W > OtherVector.W - ErrorValue))
-			{
-				return true;
-			}
-
-			return false;
+			return this.Equals((Vector2Float)obj);
 		}
 
 		#endregion public override bool Equals(object obj)
@@ -999,20 +920,32 @@ namespace MatterHackers.VectorMath
 
 		#endregion Public Members
 
-		#region IEquatable<Vector4d> Members
+		#region IEquatable<Vector2Floatd> Members
 
 		/// <summary>Indicates whether the current vector is equal to another vector.</summary>
 		/// <param name="other">A vector to compare with this vector.</param>
 		/// <returns>true if the current vector is equal to the vector parameter; otherwise, false.</returns>
-		public bool Equals(Vector4 other)
+		public bool Equals(Vector2Float other)
 		{
 			return
 				X == other.X &&
-				Y == other.Y &&
-				Z == other.Z &&
-				W == other.W;
+				Y == other.Y;
 		}
 
-		#endregion IEquatable<Vector4d> Members
+		/// <summary>Indicates whether the current vector is equal to another vector.</summary>
+		/// <param name="other">A vector to compare with this vector.</param>
+		/// <returns>true if the current vector is equal to the vector parameter; otherwise, false.</returns>
+		public bool Equals(Vector2Float other, double errorRange)
+		{
+			if ((X < other.X + errorRange && X > other.X - errorRange) &&
+				(Y < other.Y + errorRange && Y > other.Y - errorRange))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		#endregion IEquatable<Vector2Floatd> Members
 	}
 }

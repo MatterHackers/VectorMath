@@ -25,6 +25,7 @@ SOFTWARE.
 #endregion --- License ---
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 
@@ -34,8 +35,18 @@ namespace MatterHackers.VectorMath
 	[JsonObject]
 	[Serializable]
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Vector2 : IEquatable<Vector2> , IConvertible
+	public struct Vector2 : IEquatable<Vector2>
 	{
+		/// <summary>
+		/// Defines an instance with all components set to positive infinity.
+		/// </summary>
+		public static readonly Vector2 PositiveInfinity = new Vector2(double.PositiveInfinity, double.PositiveInfinity);
+
+		/// <summary>
+		/// Defines an instance with all components set to negative infinity.
+		/// </summary>
+		public static readonly Vector2 NegativeInfinity = new Vector2(double.NegativeInfinity, double.NegativeInfinity);
+
 		#region Fields
 
 		/// <summary>The X coordinate of this instance.</summary>
@@ -88,6 +99,12 @@ namespace MatterHackers.VectorMath
 			this.Y = vector.Y;
 		}
 
+		public Vector2(Vector3Float vector)
+		{
+			this.X = vector.X;
+			this.Y = vector.Y;
+		}
+
 		#endregion Constructors
 
 		#region Properties
@@ -128,6 +145,19 @@ namespace MatterHackers.VectorMath
 		}
 
 		/// <summary>
+		/// return a 64 bit hash code proposed by Jon Skeet
+		// http://stackoverflow.com/questions/8094867/good-gethashcode-override-for-list-of-foo-objects-respecting-the-order
+		/// </summary>
+		/// <returns></returns>
+		public ulong GetLongHashCode(ulong hash = 14695981039346656037)
+		{
+			hash = Vector4.GetLongHashCode(X, hash);
+			hash = Vector4.GetLongHashCode(Y, hash);
+
+			return hash;
+		}
+
+		/// <summary>
 		/// Get the delta angle from start to end relative to this
 		/// </summary>
 		/// <param name="startPosition"></param>
@@ -157,12 +187,18 @@ namespace MatterHackers.VectorMath
 		/// Gets the length (magnitude) of the vector.
 		/// </summary>
 		/// <seealso cref="LengthSquared"/>
+		[JsonIgnore]
 		public double Length
 		{
 			get
 			{
 				return System.Math.Sqrt(X * X + Y * Y);
 			}
+		}
+
+		public double Distance(Vector2 p)
+		{
+			return (this - p).Length;
 		}
 
 		#endregion public double Length
@@ -177,6 +213,7 @@ namespace MatterHackers.VectorMath
 		/// for comparisons.
 		/// </remarks>
 		/// <see cref="Length"/>
+		[JsonIgnore]
 		public double LengthSquared
 		{
 			get
@@ -250,6 +287,17 @@ namespace MatterHackers.VectorMath
 		}
 
 		#endregion public void Normalize()
+
+		public bool IsValid()
+		{
+			if (double.IsNaN(X) || double.IsInfinity(X)
+				|| double.IsNaN(Y) || double.IsInfinity(Y))
+			{
+				return false;
+			}
+
+			return true;
+		}
 
 		#endregion Instance
 
@@ -424,6 +472,27 @@ namespace MatterHackers.VectorMath
 			return a;
 		}
 
+		public static Vector2 Parse(string s)
+		{
+			var result = Vector2.Zero;
+			var values = s.Split(',').Select(sValue =>
+			{
+				double number = 0;
+				if (double.TryParse(sValue, out number))
+				{
+					return double.Parse(sValue);
+				}
+				return 0;
+			}).ToArray();
+
+			for (int i = 0; i < Math.Min(2, values.Length); i++)
+			{
+				result[i] = values[i];
+			}
+
+			return result;
+		}
+
 		/// <summary>
 		/// Calculate the component-wise minimum of two vectors
 		/// </summary>
@@ -564,6 +633,11 @@ namespace MatterHackers.VectorMath
 		public static double Cross(Vector2 left, Vector2 right)
 		{
 			return left.X * right.Y - left.Y * right.X;
+		}
+
+		public double Cross(Vector2 right)
+		{
+			return this.X * right.Y - this.Y * right.X;
 		}
 
 		#endregion Cross
@@ -947,93 +1021,5 @@ namespace MatterHackers.VectorMath
 		}
 
 		#endregion IEquatable<Vector2d> Members
-
-		#region IConvertable
-		public TypeCode GetTypeCode()
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool ToBoolean(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public char ToChar(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public sbyte ToSByte(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public byte ToByte(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public short ToInt16(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public ushort ToUInt16(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int ToInt32(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public uint ToUInt32(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public long ToInt64(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public ulong ToUInt64(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public float ToSingle(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public double ToDouble(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public decimal ToDecimal(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public DateTime ToDateTime(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public string ToString(IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		public object ToType(Type conversionType, IFormatProvider provider)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion IConvertable
 	}
 }
